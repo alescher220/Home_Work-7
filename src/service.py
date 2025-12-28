@@ -4,38 +4,35 @@ import copy
 from src.email import Email
 from src.status import Status
 
+from src.status import Status
+from copy import deepcopy
+
 class EmailService:
-    def add_send_date(self) -> str:
-        return date.today().isoformat()
+    def send_email(self, email: Email) -> list[Email]:
+        # 1. Письмо не готово – сразу FAILED
+        if email.status != Status.READY:
+            return [
+                Email(
+                    subject=email.subject,
+                    body=email.body,
+                    sender=email.sender,
+                    recipients=email.recipients,
+                    status=Status.FAILED,
+                )
+            ]
 
-    def send_email(self, email: Email) -> List[Email]:
-        sent_emails = []
+        # 2. Главная ветка – рассылаем каждому получателю
+        sent_messages = []
+        for rcpt in email.recipients:
+            copy = deepcopy(email)
+            copy.recipients = [rcpt]          # по одному адресату
+            copy.status = Status.SENT
+            copy.date = date.today().isoformat()
+            sent_messages.append(copy)
 
-        # Подготовка письма
-        prepared_email = copy.deepcopy(email)
-        prepared_email.prepare()
+        return sent_messages   # ← важно: всегда возвращаем список
 
-        # Если нет получателей — возвращаем пустой список
-        if not prepared_email.recipients:
-            return []
 
-        send_date = self.add_send_date()
-
-        for recipient in prepared_email.recipients:
-            # Создаём копию для каждого получателя
-            sent_email = copy.deepcopy(prepared_email)
-            sent_email.recipients = [recipient]
-            sent_email.date = send_date
-
-            # Устанавливаем статус
-            if sent_email.status == Status.READY:
-                sent_email.status = Status.SENT
-            else:
-                sent_email.status = Status.FAILED
-
-            sent_emails.append(sent_email)
-
-        return sent_emails
 
 
 
