@@ -35,6 +35,7 @@ class EmailService:
 
 
 
+
 class LoggingEmailService(EmailService):
     def send_email(self, email: Email) -> List[Email]:
         sent_emails = super().send_email(email)
